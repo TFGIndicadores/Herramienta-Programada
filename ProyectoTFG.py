@@ -1,4 +1,5 @@
 import pandas as pd
+import calendar
 import sqlite3
 import pandas as pd
 import flet as ft
@@ -121,352 +122,360 @@ def calcIndicadores(periodo,consol,form):
     
     #Calculo de indicadores servicio
     indServicio = pd.DataFrame(columns=['PERIODO', 'INDICADOR', 'VALOR'])
-    indServicio = indServicio.append({
+
+    nuevoIndServ=[]
+
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'ESTANDAR PACIENTE POR HORA DE LA UNIDAD',
         'VALOR': (hojasFormulario['Consultas Externas']['Consultas programadas en consulta externa'].sum()/hojasFormulario['Consultas Externas']['Horas programadas para consulta externa'].sum())
                 if hojasFormulario['Consultas Externas']['Horas programadas para consulta externa'].sum() > 0 else None 
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE PRÓTESIS REALIZADAS TOTAL SUPERIOR',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][0]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE PRÓTESIS REALIZADAS TOTAL INFERIOR',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][1]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE PRÓTESIS REALIZADAS PARCIAL SUPERIOR',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][2]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE PRÓTESIS REALIZADAS PARCIAL INFERIOR',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][3]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE PRÓTESIS REALIZADAS OBTURADORES',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][4]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE PRÓTESIS REALIZADAS REPARACIONES',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][5]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'TOTAL DE APARATOS ORTODONCIA',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][6]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'TOTAL DE APARATOS ODONTOPEDIATRIA',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][7]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'TOTAL DE PLANOS OCLUSALES',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][8]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE REFERENCIAS ACEPTADAS',
         'VALOR': hojasFormulario['Referencias']['Aceptado'].sum()
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CANTIDAD DE REFERENCIAS RECHAZADAS',
         'VALOR': hojasFormulario['Referencias']['Rechazado'].sum()
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CONSULTAS ODONTOLÓGICAS PRIMERA VEZ',
         'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[0,:5].sum()
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CONSULTAS ODONTOLÓGICAS SUBSECUENTES',
         'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[0,5]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'TELECONSULTAS',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][9]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'HORAS EN TELECONSULTAS',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][10]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'TELEORIENTACIONES',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][11]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'HORAS EN TELEORIENTACIONES',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][12]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'APARATOLOGÍA',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][13]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'HORAS DE HOSPITALIZACIÓN',
         'VALOR': hojasFormulario['Otros Datos']['Resultado'][14]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'NÚMERO DE NIÑOS (AS) DE 0 A MENOS DE 10 AÑOS CON ATENCIÓN ODONTOLÓGICA PREVENTIVA DE PRIMERA VEZ EN EL AÑO',
         'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[1,7]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'NÚMERO DE ADOLESCENTES DE 10 A MENOS DE 20 AÑOS CON ATENCIÓN ODONTOLÓGICA PREVENTIVA DE PRIMERA VEZ EN EL AÑO',
         'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[2,7]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'PACIENTES EMBARAZADAS CON ATENCIÓN ODONTOLÓGICA PREVENTIVA DE PRIMERA VEZ EN EL AÑO',
         'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[0,6]
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN NIÑOS (AS) DE 0 A MENOS DE 10 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
         'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[1,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][17])
                 if hojasFormulario['Otros Datos']['Resultado'][17] > 0 else None
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN ADOLESCENTES DE 10 A MENOS DE 20 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
         'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[2,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][18])
                 if hojasFormulario['Otros Datos']['Resultado'][18] > 0 else None
-    }, ignore_index=True)
+    })
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN HOMBRES DE 20 AÑOS A 64 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
         'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[3,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][19])
                 if hojasFormulario['Otros Datos']['Resultado'][19] > 0 else None
-    }, ignore_index=True)
+    })
 
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN MUJERES DE 20 AÑOS A 64 AÑOS, EN TERCER NIVEL DE ATENCIÓN',
         'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[4,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][20])
                 if hojasFormulario['Otros Datos']['Resultado'][20] > 0 else None
-    }, ignore_index=True)
+    })
 
 
-    indServicio = indServicio.append({
+    nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN PERSONAS DE MÁS DE 65 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
         'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[5,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][21])
                 if hojasFormulario['Otros Datos']['Resultado'][21] > 0 else None
-    }, ignore_index=True)
+    })
+    indServicio = pd.concat([indServicio, pd.DataFrame(nuevoIndServ)], ignore_index=True)
+
 
     #Calculo oficial de indicadores especialidad
-
     esps = hojasFormulario['Consultas Externas']['Especialidad'].unique()
 
-    indEspecialidad = pd.DataFrame(columns=['PERIODO','ESPECIALIDAD', 'INDICADOR', 'VALOR'])
+    indEspecialidad = pd.DataFrame(columns=['PERIODO', 'ESPECIALIDAD', 'INDICADOR', 'VALOR'])
 
     for esp in esps:
-        indEspecialidad = indEspecialidad.append({
+        nuevoIndEsp = []
+
+        nuevoIndEsp.append({
             'PERIODO': periodo,
-            'ESPECIALIDAD' : esp,
+            'ESPECIALIDAD': esp,
             'INDICADOR': 'HORAS PROGRAMADAS PARA LA ATENCION DE PACIENTES',
-            'VALOR': hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad']==esp]['Horas programadas para consulta externa'].sum()
-        }, ignore_index=True)
+            'VALOR': hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad'] == esp]['Horas programadas para consulta externa'].sum()
+        })
 
-        indEspecialidad = indEspecialidad.append({
+        nuevoIndEsp.append({
             'PERIODO': periodo,
-            'ESPECIALIDAD' : esp,
+            'ESPECIALIDAD': esp,
             'INDICADOR': 'PRODUCCIÓN REAL',
-            'VALOR': hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad']==esp]['Consultas realizadas en consulta externa'].sum()
-        }, ignore_index=True)
+            'VALOR': hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad'] == esp]['Consultas realizadas en consulta externa'].sum()
+        })
 
-        indEspecialidad = indEspecialidad.append({
+        nuevoIndEsp.append({
             'PERIODO': periodo,
-            'ESPECIALIDAD' : esp,
+            'ESPECIALIDAD': esp,
             'INDICADOR': 'HORAS EJECUTADAS EN LA ATENCION DE PACIENTES',
-            'VALOR': hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad']==esp]['Horas utilizadas para consulta externa'].sum()
-        }, ignore_index=True)
+            'VALOR': hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad'] == esp]['Horas utilizadas para consulta externa'].sum()
+        })
 
-        indEspecialidad = indEspecialidad.append({
+        nuevoIndEsp.append({
             'PERIODO': periodo,
-            'ESPECIALIDAD' : esp,
+            'ESPECIALIDAD': esp,
             'INDICADOR': 'USUARIOS ATENDIDOS POR HORA PROGRAMADO PARA LA ATENCION DE PACIENTES',
-            'VALOR': (hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad']==esp]['Consultas realizadas en consulta externa'].sum()/hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad']==esp]['Horas programadas para consulta externa'].sum())
-                    if hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad']==esp]['Horas programadas para consulta externa'].sum() > 0 else None
-        }, ignore_index=True)
+            'VALOR': (hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad'] == esp]['Consultas realizadas en consulta externa'].sum() /
+                    hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad'] == esp]['Horas programadas para consulta externa'].sum())
+                    if hojasFormulario['Consultas Externas'][hojasFormulario['Consultas Externas']['Especialidad'] == esp]['Horas programadas para consulta externa'].sum() > 0 else None
+        })
+
+        indEspecialidad = pd.concat([indEspecialidad, pd.DataFrame(nuevoIndEsp)], ignore_index=True)
 
     
     #Calculo oficial de indicadores profesional
-
     indDoctor = pd.DataFrame(columns=['PERIODO','PROFESIONAL', 'INDICADOR', 'VALOR'])
 
     for index, row in hojasFormulario['Consultas Externas'].iterrows():
+        nuevoIndDoc = []
         
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'CAPACIDAD MAXIMA PRÁCTICA',
             'VALOR': ( 2 * row['Horas programadas para consulta externa'])
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'CAPACIDAD DE PRODUCCIÓN PREVISTA',
             'VALOR': ( row['Horas programadas para consulta externa'] * hojasFormulario['Metas']['Meta'][2])
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PRODUCCIÓN REAL',
             'VALOR': row['Consultas realizadas en consulta externa']
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'USUARIOS ATENDIDOS POR HORA PROGRAMADO PARA LA ATENCION DE PACIENTES',
             'VALOR': (row['Consultas realizadas en consulta externa']/row['Horas programadas para consulta externa'])
                     if row['Horas programadas para consulta externa'] > 0 else None
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'USUARIOS POR HORA UTILIZADA EN ATENCION DE PACIENTES',
             'VALOR': (row['Consultas realizadas en consulta externa']/row['Horas utilizadas para consulta externa'])
                     if row['Horas utilizadas para consulta externa'] > 0 else None
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'AUSENTISMO CONSULTA EXTERNA',
             'VALOR': (row['Citas perdidas en consulta externa']/(row['Consultas realizadas en consulta externa']+row['Citas perdidas en consulta externa']+row['Cupos no utilizados en consulta externa']))
                     if (row['Consultas realizadas en consulta externa']+row['Citas perdidas en consulta externa']+row['Cupos no utilizados en consulta externa']) > 0 else None
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'SUSTITUCIÓN DE PACIENTES CONSULTA EXTERNA',
             'VALOR': (row['Citas sustituidas en consulta externa']/row['Citas perdidas en consulta externa'])
                     if row['Citas perdidas en consulta externa'] > 0 else None
-        }, ignore_index=True)
+        })
 
         balPerExt = ((row['Citas perdidas en consulta externa']+row['Cupos no utilizados en consulta externa']) - (row['Citas sustituidas en consulta externa']+row['Recargos en consulta externa']))
     
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'BALANCE DE CUPOS PERDIDOS EN CONSULTA EXTERNA',
             'VALOR': balPerExt 
-        }, ignore_index=True)
+        })
 
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'COSTO POR CUPOS PERDIDOS EN CONSULTA EXTERNA',
             'VALOR': (balPerExt * hojasFormulario['Otros Datos']['Resultado'][15]) 
                     
-        }, ignore_index=True)
-
+        })
+        indDoctor = pd.concat([indDoctor, pd.DataFrame(nuevoIndDoc)], ignore_index=True)
+        
     #Consulta Procedimientos
     for index, row in hojasFormulario['Consultas Procedimientos'].iterrows():
-
-        indDoctor = indDoctor.append({
+        nuevoIndDoc = []
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'AUSENTISMO CONSULTA PROCEDIMIENTOS',
             'VALOR': (row['Citas perdidas en consulta procedimiento']/(row['Consultas realizadas en consulta procedimiento']+row['Citas perdidas en consulta procedimiento']+row['Cupos no utilizados en consulta procedimiento']))
                     if (row['Consultas realizadas en consulta procedimiento']+row['Citas perdidas en consulta procedimiento']+row['Cupos no utilizados en consulta procedimiento']) > 0 else None
-        }, ignore_index=True)
-
-        indDoctor = indDoctor.append({
+        })
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'SUSTITUCIÓN DE PACIENTES CONSULTA PROCEDIMIENTOS',
             'VALOR': (row['Citas sustituidas en consulta procedimiento']/row['Citas perdidas en consulta procedimiento'])
                     if row['Citas perdidas en consulta procedimiento'] > 0 else None
-        }, ignore_index=True)
-
+        })
         balPerProc = ((row['Citas perdidas en consulta procedimiento']+row['Cupos no utilizados en consulta procedimiento'])-(row['Citas sustituidas en consulta procedimiento']+row['Recargos en consulta procedimiento']))
-
-        indDoctor = indDoctor.append({
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'BALANCE DE CUPOS PERDIDOS EN CONSULTA PROCEDIMIENTOS',
             'VALOR': balPerProc
-        }, ignore_index=True)
-
-        indDoctor = indDoctor.append({
+        })
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'COSTO POR CUPOS PERDIDOS EN CONSULTA PROCEDIMIENTOS',
             'VALOR': (balPerProc * hojasFormulario['Otros Datos']['Resultado'][16])
-        }, ignore_index=True)
+        })
+        indDoctor = pd.concat([indDoctor, pd.DataFrame(nuevoIndDoc)], ignore_index=True)
 
     #Consulta Procedimientos
     for index, row in hojasFormulario['Ortodoncia-Ortopedia'].iterrows():
-
-        #Otra tabla, por definir
-        indDoctor = indDoctor.append({
+        nuevoIndDoc = []
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PORCENTAJE DE PACIENTES EN ORTODONCIA',
             'VALOR': row['Porcentaje de pacientes en ortodoncia']
-        }, ignore_index=True)
-
-        indDoctor = indDoctor.append({
+        })
+        nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PORCENTAJE DE PACIENTES EN ORTOPEDIA',
             'VALOR': row['Porcentaje de pacientes en ortopedia']
-        }, ignore_index=True)
+        })
+        indDoctor = pd.concat([indDoctor, pd.DataFrame(nuevoIndDoc)], ignore_index=True)
         
+
     indDoctor['original_index'] = indDoctor.index
     indDoctor = indDoctor.sort_values(by=['PROFESIONAL', 'original_index'])
     indDoctor.drop('original_index', axis=1, inplace=True)
-    
+
+
     #Referencias por area de salud
     indReferencias = hojasFormulario['Referencias'].iloc[:,1:].groupby('Área de Salud', as_index = False).sum()
     indReferencias.insert(0, 'PERIODO', periodo)
@@ -497,6 +506,49 @@ def calcIndicadores(periodo,consol,form):
 
 def main(page: Page):
     
+    def close_success_dialog(e):
+        success_dialog.open = False
+        page.update()
+
+    def show_success_dialog():
+        page.dialog = success_dialog
+        success_dialog.open = True
+        page.update()
+
+    def validar_carga():
+        return not (excel_consol_path.current and excel_form_path.current and mes_dropdown.current.value and yr_dropdown.current.value)
+            
+    # Seleccionar archivos de excel
+    def select_consol(e: FilePickerResultEvent):
+        excel_consol.value = (
+            ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelado"
+        )
+      
+        excel_consol.update()
+        excel_consol_path.current = e.files[0].path.replace("\\", "/") if excel_consol.value != "Cancelado" else None 
+        cargar_ind.current.disabled = validar_carga()
+        page.update()
+    
+    def select_form(e: FilePickerResultEvent):
+        excel_form.value = (
+            ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelado"
+        )
+        
+        excel_form.update()
+        excel_form_path.current = e.files[0].path.replace("\\", "/") if excel_form.value != "Cancelado" else None 
+        cargar_ind.current.disabled = validar_carga()
+        page.update()
+
+    def dropdown_change(e):
+        cargar_ind.current.disabled = validar_carga()
+        page.update()
+
+    def func_ind(e):
+        cargar_ind.current.disabled = True
+        periodo = mes_dropdown.current.value +" "+ yr_dropdown.current.value
+        calcIndicadores(periodo,excel_consol_path.current,excel_form_path.current)
+        show_success_dialog()
+        
     page.title = "Herramienta Programada TFG"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.theme_mode = 'light'
@@ -508,51 +560,27 @@ def main(page: Page):
 
     excel_consol_path = Ref[str]()
     excel_form_path = Ref[str]()
+
+    meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    yrs = [str(year) for year in range(2023, 2033)]
     mes_dropdown = Ref[ft.Dropdown]()
     yr_dropdown = Ref[ft.Dropdown]()
+
+    success_dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Completado!"),
+        content=ft.Text("Los indicadores han sido cargados a la base de datos!"),
+        actions=[
+            ft.TextButton("OK", on_click=close_success_dialog)
+        ],
+        actions_alignment=ft.MainAxisAlignment.END)
     
-    def validar_carga():
-        return not (excel_consol_path.current and excel_form_path.current and mes_dropdown.current.value and yr_dropdown.current.value)
-            
-    # Seleccionar archivos de excel
-    def select_consol(e: FilePickerResultEvent):
-
-        excel_consol.value = (
-            ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelado"
-        )
-      
-        excel_consol.update()
-        excel_consol_path.current = e.files[0].path.replace("\\", "/") if excel_consol.value != "Cancelado" else None 
-        cargar_ind.current.disabled = validar_carga()
-        page.update()
-        
-
     select_first_file = FilePicker(on_result=select_consol)
     excel_consol = Text()
 
-
-    def select_form(e: FilePickerResultEvent):
-        excel_form.value = (
-            ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelado"
-        )
-        
-        excel_form.update()
-        excel_form_path.current = e.files[0].path.replace("\\", "/") if excel_form.value != "Cancelado" else None 
-        cargar_ind.current.disabled = validar_carga()
-        page.update()
-        
-
     select_second_file = FilePicker(on_result=select_form)
     excel_form = Text()
-
-    def dropdown_change(e):
-        cargar_ind.current.disabled = validar_carga()
-        page.update()
-
-    def func_ind(e):
-        periodo = mes_dropdown.current.value +" "+ yr_dropdown.current.value
-        calcIndicadores(periodo,excel_consol_path.current,excel_form_path.current)
-
 
     page.overlay.extend([select_first_file,select_second_file])
 
@@ -565,21 +593,15 @@ def main(page: Page):
             ref = mes_dropdown,
             label="Mes",
             on_change=dropdown_change, 
-            options=[
-                ft.dropdown.Option("Octubre"),
-                ft.dropdown.Option("Noviembre"),
-                ft.dropdown.Option("Diciembre"),
-            ])
-            ,
+            options=[ft.dropdown.Option(mes) for mes in meses]
+            )
+        ,
         ft.Dropdown(
             ref = yr_dropdown,
             label="Año",
             on_change=dropdown_change,  
-            options=[
-                ft.dropdown.Option("2023"),
-                ft.dropdown.Option("2024"),
-                ft.dropdown.Option("2025"),
-            ])
+            options=[ft.dropdown.Option(yr) for yr in yrs]
+            )
         ])
         ,
 
