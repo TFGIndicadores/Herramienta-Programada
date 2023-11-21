@@ -1,7 +1,6 @@
 import pandas as pd
-import calendar
 import sqlite3
-import pandas as pd
+import os
 import flet as ft
 from flet import (
     ElevatedButton,
@@ -14,8 +13,10 @@ from flet import (
     Ref
 )
 
-def prosFomularioAdicional(filepath):
 
+db_path = "PruebasTFG3.db"
+
+def prosFomularioAdicional(filepath):
     xls = pd.ExcelFile(filepath)
     dfs = {}
     for sheet_name in xls.sheet_names:
@@ -84,7 +85,7 @@ def prosConsolidado(filepath):
 
         # Replicar la tabla de excel del resumen del mes con los totales de consultas por cada categoria
 
-        # Se hace un slice de las primeras filas 18 en adelante, se eliminan vacios full y se auto completan algunas categorias faltantes
+        # Se hace un slice de las filas 18 en adelante, se eliminan vacios full y se auto completan algunas categorias faltantes
         df_total = df.iloc[18:].copy()
         df_total.dropna(axis = 1,how = "all",inplace = True)
         df_total[:3].fillna(method="ffill", axis=1,inplace = True)
@@ -453,7 +454,7 @@ def calcIndicadores(periodo,consol,form):
         })
         indDoctor = pd.concat([indDoctor, pd.DataFrame(nuevoIndDoc)], ignore_index=True)
 
-    #Consulta Procedimientos
+    #Consulta Ortodoncia-Ortopedia
     for index, row in hojasFormulario['Ortodoncia-Ortopedia'].iterrows():
         nuevoIndDoc = []
         nuevoIndDoc.append({
@@ -491,7 +492,83 @@ def calcIndicadores(periodo,consol,form):
 
 
     #Cargar tablas a BD
-    sqlconn = sqlite3.connect('PruebasTFG.db')
+    if not os.path.exists(db_path):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS IndicadoresServicio (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                PERIODO TEXT,
+                INDICADOR TEXT,
+                VALOR REAL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS IndicadoresEspecialidad (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                PERIODO TEXT,
+                ESPECIALIDAD TEXT,
+                INDICADOR TEXT,
+                VALOR REAL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS IndicadoresDoctor (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                PERIODO TEXT,
+                PROFESIONAL TEXT,
+                INDICADOR TEXT,
+                VALOR REAL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS IndicadoresReferencias (
+                PERIODO	TEXT,
+                "Área de Salud" TEXT,
+                "O.G." REAL,
+                "O.G.A" REAL,
+                "ORTOD." REAL,
+                "ENDOD." REAL,
+                "PERIOD." REAL,
+                "PROSTOD." REAL,
+                "TTM D.O." REAL,
+                "PROT.MAXILOF." REAL,
+                "ODONTOPED." REAL,
+                "ODONTOGER." REAL,
+                "CIR.MAXILOF." REAL,
+                Rechazado REAL,
+                Aceptado REAL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS IndicadoresListas (
+                PERIODO	TEXT,
+                Especialidad TEXT,
+                "Factor crítico"	TEXT,
+                "Fecha próxima cita"	DATE
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS IndicadoresMetas (
+                PERIODO TEXT,
+                Indicador TEXT,
+                Meta REAL,
+                Rango REAL,
+                "Tipo de meta" TEXT
+            )
+        ''')
+        cursor.close()
+        conn.close()
+
+
+
+    sqlconn = sqlite3.connect(db_path)
     cursor = sqlconn.cursor()
 
     indServicio.to_sql('IndicadoresServicio', sqlconn, if_exists='append', index=False)
