@@ -14,111 +14,125 @@ from flet import (
 )
 
 
-db_path = "PruebasTFG3.db"
+db_path = "PruebasTFG.db"
+tablas = ['IndicadoresServicio', 'IndicadoresEspecialidad', 'IndicadoresDoctor', 'IndicadoresReferencias', 'IndicadoresListas', 'IndicadoresMetas']
+
+def validararchivo(filepath):
+    # Verificar si la extensión del archivo es .xlsx
+    if filepath.endswith('.xlsx'):
+        xls = pd.ExcelFile(filepath)
+        for sheet_name in xls.sheet_names:
+            if sheet_name == "Inicio":
+                df = pd.read_excel(filepath, 'Inicio')
+                x = df.iloc[5,0]
+                if x == "x":
+                    return True
+            else:
+                return False
+        else: 
+            return False   
+    else:
+        return False
+
+def validardatabase(periodo):  
+    # Database connection
+    sqlconn = sqlite3.connect(db_path)
+    cursor = sqlconn.cursor()
+
+    try:
+        # Check each table for rows
+        for tabla in tablas:
+            cursor.execute(f"SELECT * FROM {tabla} WHERE PERIODO = '{periodo}'")
+            rows = cursor.fetchall()
+            if len(rows) > 0:
+                # If rows are found, return True
+                cursor.close()
+                sqlconn.close()
+                return True
+
+        # If no rows are found in any table, return False
+        cursor.close()
+        sqlconn.close()
+        return False
+
+    except sqlite3.Error:
+        # In case of a database error, return False
+        cursor.close()
+        sqlconn.close()
+        return False
+
+
+def borrardatos(periodo):
+    # Database connection
+    sqlconn = sqlite3.connect(db_path)
+    cursor = sqlconn.cursor()
+
+    try:
+        for tabla in tablas:
+            cursor.execute(f"DELETE FROM {tabla} WHERE PERIODO = '{periodo}'")
+        sqlconn.commit()
+
+    except sqlite3.Error as e:
+        sqlconn.rollback()
+
+    finally:
+        cursor.close()
+        sqlconn.close()
+
 
 def prosFomularioAdicional(filepath):
+
     xls = pd.ExcelFile(filepath)
     dfs = {}
     for sheet_name in xls.sheet_names:
-        dfs[sheet_name] = pd.read_excel(xls, sheet_name)
-    return dfs
-
-def prosConsolidado(filepath):
-    xls = pd.ExcelFile(filepath)
-    sheet_names = xls.sheet_names
-    result_dfs = {}
-
-    for sht in sheet_names:
-        df = pd.read_excel(filepath, sheet_name=sht)
-
-        # Evaluar si la hoja es la mensual o es de especialidad, 
-        #** Agregar validaciones adicionales para asegurar que solo se procese el file correcto
-        if sht == "Mensual":   
-            tipo_hoja = "Mensual"
+        if sheet_name != "Consolidado":
+            dfs[sheet_name] = pd.read_excel(xls, sheet_name)
         else:
-            tipo_hoja = "Especialidad"
+            df = pd.read_excel(xls, sheet_name)
+            # Evaluar si la hoja es la mensual o es de especialidad, 
+            #** Agregar validaciones adicionales para asegurar que solo se procese el file correcto
 
-        # Eliminar filas y columnas vacías
+            # Eliminar filas y columnas vacías
 
-        df.dropna(axis = 0,how = "all",inplace = True)  
-        df.dropna(axis = 1,how = "all",inplace = True)  
-        df = df.reset_index(drop=True)
+            df.dropna(axis = 0,how = "all",inplace = True)  
+            df.dropna(axis = 1,how = "all",inplace = True)  
+            df = df.reset_index(drop=True)
 
-        # Eliminar fila extra de la hoja "Mensual"
+            # Eliminar fila extra de la hoja "Mensual"
 
-        if tipo_hoja == "Mensual":
             df.drop(2, inplace = True)
             df = df.reset_index(drop=True)
 
-        # La hoja "Especialidad" tiene una columna adicional que permite identificar la tabla donde se encuentra el agregado de datos 
-        # Se eliminan las otras filas y se actualiza el df al tamaño correcto para procesarlo
+            # Replicar la tabla de excel del resumen del mes con los totales de consultas por cada categoria
 
-        elif tipo_hoja == "Especialidad":
-            indexnum = int(df.loc[df.iloc[:,0] == "TOTAL"].index[0])
+            # Se hace un slice de las primeras filas 18 en adelante, se eliminan vacios full y se auto completan algunas categorias faltantes
+            df_total = df.iloc[18:].copy()
+            df_total.dropna(axis = 1,how = "all",inplace = True)
+            df_total[:3].fillna(method="ffill", axis=1,inplace = True)
+            df_total[:3].fillna(method="ffill", axis=0,inplace = True)
 
-            df = df.iloc[indexnum:]
+            # Se transpone la tabla para concatenar las categorias y unificarlas en una sola columna(celdas combinadas de excel) 
+            df_total = df_total.transpose()
+            df_total.iloc[1, 1] = df_total.iloc[1, 1] +" - "+ df_total.iloc[1, 2]
+            df_total.iloc[2:6, 1] = df_total.iloc[2:6, 1].astype(str) +" - "+ df_total.iloc[2:6, 2].astype(str) +" - "+ df_total.iloc[2:6, 3].astype(str)
+            df_total.iloc[1:-3, 0] = df_total.iloc[1:-3, 0].astype(str) +" - "+ df_total.iloc[1:-3, 1].astype(str)
 
-            nombre_esp = df.iloc[0,1]
-            codigo_esp = sht  #depende de cada hoja
-            df = df.iloc[:,1:] 
+            #Se eliminan las columnas que tenian las subcategorias, y se reindexa
+            df_total.drop(df_total.columns[[1, 2, 3]],axis = 1, inplace = True)
+            df_total.columns = df_total.iloc[0]
+            df_total = df_total[1:]
+            df_total = df_total.reset_index(drop=True)
+            df_total.columns.rename("",inplace=True)
+            df_total.iloc[:, 0] = df_total.iloc[:, 0].str.replace('Frecuencia (marcar solo una)', 'Frecuencia', regex=False)
 
-        # Generar una tabla(Posible serie), de las horas contratadas, programadas, etc.
-        # Se hace un slice de las primeras dos filas, y se eliminan vacios 
+            # Se transpone la tabla para volver al formato original (validar si vale la pena)
+            df_total = df_total.transpose()
+            df_total.columns = df_total.iloc[0]
+            df_total = df_total[1:]
+            dfs[sheet_name] = df_total
+    return dfs
 
-        df_jornada = df.iloc[1:3,1:8].copy() 
-        df_jornada.dropna(axis = 1,how = "all",inplace = True)
-        df_jornada.columns = df_jornada.iloc[0]
-        df_jornada = df_jornada[1:]
-        df_jornada = df_jornada.reset_index(drop=True)
-        df_jornada.columns.rename("",inplace=True)
-        df_jornada = df_jornada.transpose()
-        df_jornada.rename(columns={0: 'Horas'},inplace= True)
-
-        # Replicar la tabla de excel con las horas utilizadas por actividad
-        # Se hace un slice de las primeras filas 3 a 17  , se eliminan vacios y se nombran columnas de acuerdo al excel
-
-        df_tiempo = df.iloc[3:18].copy()
-        df_tiempo.dropna(axis = 1,how = "all",inplace = True)
-        df_tiempo.dropna(axis = 0,how = "all",inplace = True)
-        df_tiempo.columns = ['Actividad', 'Programado', 'Utilizado', 'N° Actividades']
-        df_tiempo = df_tiempo.reset_index(drop=True)
-
-        # Replicar la tabla de excel del resumen del mes con los totales de consultas por cada categoria
-
-        # Se hace un slice de las filas 18 en adelante, se eliminan vacios full y se auto completan algunas categorias faltantes
-        df_total = df.iloc[18:].copy()
-        df_total.dropna(axis = 1,how = "all",inplace = True)
-        df_total[:3].fillna(method="ffill", axis=1,inplace = True)
-        df_total[:3].fillna(method="ffill", axis=0,inplace = True)
-
-        # Se transpone la tabla para concatenar las categorias y unificarlas en una sola columna(celdas combinadas de excel) 
-        df_total = df_total.transpose()
-        df_total.iloc[1, 1] = df_total.iloc[1, 1] +" - "+ df_total.iloc[1, 2]
-        df_total.iloc[2:6, 1] = df_total.iloc[2:6, 1].astype(str) +" - "+ df_total.iloc[2:6, 2].astype(str) +" - "+ df_total.iloc[2:6, 3].astype(str)
-        df_total.iloc[1:-3, 0] = df_total.iloc[1:-3, 0].astype(str) +" - "+ df_total.iloc[1:-3, 1].astype(str)
-
-        #Se eliminan las columnas que tenian las subcategorias, y se reindexa
-        df_total.drop(df_total.columns[[1, 2, 3]],axis = 1, inplace = True)
-        df_total.columns = df_total.iloc[0]
-        df_total = df_total[1:]
-        df_total = df_total.reset_index(drop=True)
-        df_total.columns.rename("",inplace=True)
-        df_total.iloc[:, 0] = df_total.iloc[:, 0].str.replace('Frecuencia (marcar solo una)', 'Frecuencia', regex=False)
-
-        # Se transpone la tabla para volver al formato original (validar si vale la pena)
-        df_total = df_total.transpose()
-        df_total.columns = df_total.iloc[0]
-        df_total = df_total[1:]
-
-        result_dfs[sht] = {
-            'df_jornada': df_jornada,
-            'df_tiempo': df_tiempo,
-            'df_total': df_total
-        }
-    return result_dfs
-
-def calcIndicadores(periodo,consol,form):
-    hojasConsolidado = prosConsolidado(consol)
+def calcIndicadores(periodo,form):
     hojasFormulario = prosFomularioAdicional(form)
     
     #Calculo de indicadores servicio
@@ -202,13 +216,13 @@ def calcIndicadores(periodo,consol,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CONSULTAS ODONTOLÓGICAS PRIMERA VEZ',
-        'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[0,:5].sum()
+        'VALOR': hojasFormulario['Consolidado'].iloc[0,:5].sum()
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CONSULTAS ODONTOLÓGICAS SUBSECUENTES',
-        'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[0,5]
+        'VALOR': hojasFormulario['Consolidado'].iloc[0,5]
     })
 
     nuevoIndServ.append({
@@ -250,39 +264,39 @@ def calcIndicadores(periodo,consol,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'NÚMERO DE NIÑOS (AS) DE 0 A MENOS DE 10 AÑOS CON ATENCIÓN ODONTOLÓGICA PREVENTIVA DE PRIMERA VEZ EN EL AÑO',
-        'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[1,7]
+        'VALOR': hojasFormulario['Consolidado'].iloc[1,7]
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'NÚMERO DE ADOLESCENTES DE 10 A MENOS DE 20 AÑOS CON ATENCIÓN ODONTOLÓGICA PREVENTIVA DE PRIMERA VEZ EN EL AÑO',
-        'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[2,7]
+        'VALOR': hojasFormulario['Consolidado'].iloc[2,7]
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'PACIENTES EMBARAZADAS CON ATENCIÓN ODONTOLÓGICA PREVENTIVA DE PRIMERA VEZ EN EL AÑO',
-        'VALOR': hojasConsolidado["Mensual"]["df_total"].iloc[0,6]
+        'VALOR': hojasFormulario['Consolidado'].iloc[0,6]
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN NIÑOS (AS) DE 0 A MENOS DE 10 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
-        'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[1,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][17])
+        'VALOR': (hojasFormulario['Consolidado'].iloc[1,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][17])
                 if hojasFormulario['Otros Datos']['Resultado'][17] > 0 else None
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN ADOLESCENTES DE 10 A MENOS DE 20 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
-        'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[2,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][18])
+        'VALOR': (hojasFormulario['Consolidado'].iloc[2,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][18])
                 if hojasFormulario['Otros Datos']['Resultado'][18] > 0 else None
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN HOMBRES DE 20 AÑOS A 64 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
-        'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[3,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][19])
+        'VALOR': (hojasFormulario['Consolidado'].iloc[3,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][19])
                 if hojasFormulario['Otros Datos']['Resultado'][19] > 0 else None
     })
 
@@ -290,7 +304,7 @@ def calcIndicadores(periodo,consol,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN MUJERES DE 20 AÑOS A 64 AÑOS, EN TERCER NIVEL DE ATENCIÓN',
-        'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[4,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][20])
+        'VALOR': (hojasFormulario['Consolidado'].iloc[4,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][20])
                 if hojasFormulario['Otros Datos']['Resultado'][20] > 0 else None
     })
 
@@ -298,7 +312,7 @@ def calcIndicadores(periodo,consol,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'COBERTURA ODONTOLÓGICA EN PERSONAS DE MÁS DE 65 AÑOS, EN EL TERCER NIVEL DE ATENCIÓN',
-        'VALOR': (hojasConsolidado["Mensual"]["df_total"].iloc[5,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][21])
+        'VALOR': (hojasFormulario['Consolidado'].iloc[5,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][21])
                 if hojasFormulario['Otros Datos']['Resultado'][21] > 0 else None
     })
     indServicio = pd.concat([indServicio, pd.DataFrame(nuevoIndServ)], ignore_index=True)
@@ -482,12 +496,12 @@ def calcIndicadores(periodo,consol,form):
     indReferencias.insert(0, 'PERIODO', periodo)
 
     #Listas de espera
-    indListas = hojasFormulario['Listas de espera'].copy()
+    indListas = hojasFormulario['Listas de espera'].iloc[:,:3].copy()
     indListas.insert(0, 'PERIODO', periodo)
     indListas
 
     #Metas de indicadores
-    listMetas = hojasFormulario['Metas'].copy()
+    listMetas = hojasFormulario['Metas'].iloc[:,:4].copy()
     listMetas.insert(0, 'PERIODO', periodo)
 
 
@@ -559,8 +573,8 @@ def calcIndicadores(periodo,consol,form):
                 PERIODO TEXT,
                 Indicador TEXT,
                 Meta REAL,
-                Rango REAL,
-                "Tipo de meta" TEXT
+                'Porcentaje de desviación de la meta' REAL,
+                Rango REAL
             )
         ''')
         cursor.close()
@@ -583,8 +597,14 @@ def calcIndicadores(periodo,consol,form):
 
 def main(page: Page):
     
+    fxls = False
+
     def close_success_dialog(e):
         success_dialog.open = False
+        page.update()
+    
+    def close_error_dialog(e):
+        error_dialog.open = False
         page.update()
 
     def show_success_dialog():
@@ -592,19 +612,41 @@ def main(page: Page):
         success_dialog.open = True
         page.update()
 
+    def show_error_dialog():
+        page.dialog = error_dialog
+        error_dialog.open = True
+        page.update()
+
+
+    def confirm_delete_dialog(page):
+        periodo = mes_dropdown.current.value +" "+ yr_dropdown.current.value
+        def close_dialog(e):
+            dialog.open = False
+            page.update()
+
+        def on_yes(e):
+            close_dialog(e)
+            borrardatos(periodo) 
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Confirmación"),
+            content=ft.Text("Ya existen indicadores para ese periodo, ¿desea borrarlos?"),
+            actions=[
+                ft.TextButton("No", on_click=close_dialog),
+                ft.TextButton("Sí", on_click=on_yes)
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        page.dialog = dialog
+        dialog.open = True
+        page.update()
+
     def validar_carga():
-        return not (excel_consol_path.current and excel_form_path.current and mes_dropdown.current.value and yr_dropdown.current.value)
+        return not (excel_form_path.current and mes_dropdown.current.value and yr_dropdown.current.value)
             
     # Seleccionar archivos de excel
-    def select_consol(e: FilePickerResultEvent):
-        excel_consol.value = (
-            ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelado"
-        )
-      
-        excel_consol.update()
-        excel_consol_path.current = e.files[0].path.replace("\\", "/") if excel_consol.value != "Cancelado" else None 
-        cargar_ind.current.disabled = validar_carga()
-        page.update()
     
     def select_form(e: FilePickerResultEvent):
         excel_form.value = (
@@ -621,11 +663,17 @@ def main(page: Page):
         page.update()
 
     def func_ind(e):
-        cargar_ind.current.disabled = True
         periodo = mes_dropdown.current.value +" "+ yr_dropdown.current.value
-        calcIndicadores(periodo,excel_consol_path.current,excel_form_path.current)
-        show_success_dialog()
-        
+        if validararchivo(excel_form_path.current):
+            if validardatabase(periodo):
+                confirm_delete_dialog(page)
+            else:
+                cargar_ind.current.disabled = True
+                calcIndicadores(periodo,excel_form_path.current)
+                show_success_dialog()
+        else:
+            show_error_dialog()
+
     page.title = "Herramienta Programada TFG"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.theme_mode = 'light'
@@ -635,8 +683,8 @@ def main(page: Page):
 
     cargar_ind = Ref[ElevatedButton]()
 
-    excel_consol_path = Ref[str]()
     excel_form_path = Ref[str]()
+
 
     meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
               "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
@@ -647,19 +695,25 @@ def main(page: Page):
     success_dialog = ft.AlertDialog(
         modal=True,
         title=ft.Text("Completado!"),
-        content=ft.Text("Los indicadores han sido cargados a la base de datos!"),
+        content=ft.Text("Se cargaron los indicadores correctamente!"),
         actions=[
             ft.TextButton("OK", on_click=close_success_dialog)
         ],
         actions_alignment=ft.MainAxisAlignment.END)
     
-    select_first_file = FilePicker(on_result=select_consol)
-    excel_consol = Text()
-
-    select_second_file = FilePicker(on_result=select_form)
+    error_dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Error!"),
+        content=ft.Text("Archivo incorrecto, favor validar"),
+        actions=[
+            ft.TextButton("OK", on_click=close_error_dialog)
+        ],
+        actions_alignment=ft.MainAxisAlignment.END)
+    
+    select_first_file = FilePicker(on_result=select_form)
     excel_form = Text()
 
-    page.overlay.extend([select_first_file,select_second_file])
+    page.overlay.extend([select_first_file])
 
     page.add(
         Row(
@@ -684,27 +738,14 @@ def main(page: Page):
 
         Row(
             [
-                Text(value="Favor seleccionar los archivos",width = 275)]),
-        Row(
-            [
-                Text(value="Cargar el consolidado mensual",width = 275),
-                ElevatedButton(
-                    "Cargar Archivo", width = 200,
-                    icon=icons.UPLOAD_FILE,
-                    on_click=lambda _: select_first_file.pick_files(
-                        allow_multiple=False
-                    ), 
-                ),
-                excel_consol,
-            ]
-        ),    
+                Text(value="Favor seleccionar los archivos",width = 275)]),  
         Row(
             [
                 Text(value="Cargar el Formulario de datos adicionales",width = 275),
                 ElevatedButton(
                     "Cargar Archivo", width = 200,
                     icon=icons.UPLOAD_FILE,
-                    on_click=lambda _: select_second_file.pick_files(
+                    on_click=lambda _: select_first_file.pick_files(
                         allow_multiple=False
                     ),
                 ),
