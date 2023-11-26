@@ -18,7 +18,7 @@ Esta herramienta de Python ha sido desarrollada como parte de un proyecto para m
 ### Instalación
 1. **Clonar o Descargar**: Clonar este repositorio o descargae el archivo `ProyectoTFG.py` en el directorio de trabajo.
 2. **Instalar Dependencias**: Ejecutar el siguiente comando para instalar las dependencias necesarias:\
-pip install pandas flet\
+`pip install pandas flet`\
 Nota: Las bibliotecas `sqlite3` y `os` ya están incluidas en la instalación estándar de Python.
 
 ### Uso
