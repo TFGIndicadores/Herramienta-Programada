@@ -87,6 +87,8 @@ def prosFomularioAdicional(filepath):
     for sheet_name in xls.sheet_names:
         if sheet_name != "Consolidado":
             dfs[sheet_name] = pd.read_excel(xls, sheet_name)
+            dfs[sheet_name].columns = dfs[sheet_name].iloc[1]
+            dfs[sheet_name] = dfs[sheet_name].iloc[2:]
         else:
             df = pd.read_excel(xls, sheet_name)
             # Evaluar si la hoja es la mensual o es de especialidad, 
@@ -678,8 +680,8 @@ def main(page: Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.theme_mode = 'light'
     page.padding = 20
-    page.window_width = 800
-    page.window_height = 500
+    page.window_width = 700
+    page.window_height = 450
 
     cargar_ind = Ref[ElevatedButton]()
 
@@ -716,6 +718,13 @@ def main(page: Page):
     page.overlay.extend([select_first_file])
 
     page.add(
+        Row(
+            [
+            ft.Icon(ft.icons.ACCOUNT_BALANCE, color="black", size=40),
+            ft.Text(" Sistema de Indicadores TFG", color="white", size=25, weight=ft.FontWeight.BOLD,bgcolor="#10457D")
+            ],
+            alignment=ft.MainAxisAlignment.CENTER
+        ),
         Row(
             [
                 Text(value="Favor indicar Mes y Año correspondientes",width = 275)]),
