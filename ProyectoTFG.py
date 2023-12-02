@@ -15,19 +15,29 @@ from flet import (
 
 
 db_path = "PruebasTFG_new.db"
-passwd = 'TFG'
 tablas = ['IndicadoresServicio', 'IndicadoresEspecialidad', 'IndicadoresDoctor', 'IndicadoresReferencias', 'IndicadoresListas', 'IndicadoresMetas']
 
 def validararchivo(filepath):
-    """Verifica si la extensión del archivo es .xlsx, y valida que en la hoja 'Inicio' en la celda A7 exista una 'x', determinado como el metodo de validacion del formulario oficial"""
+    """
+    Verifica si la extensión del archivo es .xlsx, y valida que en la hoja 'Inicio' en la celda A7 exista una 'x', determinado como el metodo de validacion del formulario oficial
+    
+    Args:
+    filepath (str): Ruta del archivo a validar.
+
+    Returns:
+    bool: True si el archivo existe y es accesible, False en caso contrario.
+    """
+    
     if filepath.endswith('.xlsx'):
         xls = pd.ExcelFile(filepath)
         for sheet_name in xls.sheet_names:
             if sheet_name == "Inicio":
                 df = pd.read_excel(filepath, 'Inicio')
-                x = df.iloc[5,0]
-                if x == "x":
-                    return True
+                val = df.iloc[5,0]
+                if val == "x":
+                    return 'comp'
+                elif val == 'y':
+                    return 'data'
             else:
                 return False
         else: 
@@ -36,12 +46,23 @@ def validararchivo(filepath):
         return False
 
 def validardatabase(periodo):  
-    """"""
+    """
+    Verifica si en la base de datos existen indicadores para el periodo indicado.
+
+    Esta función se conecta a la base de datos SQLite especificada en 'db_path' y realiza una consulta
+    para determinar si hay indicadores disponibles para el periodo proporcionado.
+
+    Args:
+    periodo (str): Periodo de tiempo para el cual se verifica la existencia de indicadores en la base de datos.
+
+    Returns:
+    bool: True si existen indicadores para el periodo indicado, False en caso contrario.
+    """
     sqlconn = sqlite3.connect(db_path)
     cursor = sqlconn.cursor()
 
     try:
-        # Check each table for rows
+        #Revisa todas las tablas y realiza un select para el periodo indicado, devuelve verdadero en caso de encontrar algun valor.
         for tabla in tablas:
             cursor.execute(f"SELECT * FROM {tabla} WHERE PERIODO = '{periodo}'")
             rows = cursor.fetchall()
@@ -50,28 +71,33 @@ def validardatabase(periodo):
                 sqlconn.close()
                 return True
 
-        # If no rows are found in any table, return False
+        # Si no hay valores en ninguna tabla, devuelve falso
         cursor.close()
         sqlconn.close()
         return False
 
+     # Si la base de datos da error (no existe), devuelve falso
     except sqlite3.Error:
-        # In case of a database error, return False
         cursor.close()
         sqlconn.close()
         return False
 
 
 def borrardatos(periodo):
-    # Database connection
+    """
+    Elimina las filas de la base de datos encontrados para el periodo indicado, para prevenir duplicación de datos.
+    """
+    # Conexión a la base de datos
     sqlconn = sqlite3.connect(db_path)
     cursor = sqlconn.cursor()
 
+    #En caso de ejecutarse, intenta eliminar todos los records para cada tabla en el periodo indicado.
     try:
         for tabla in tablas:
             cursor.execute(f"DELETE FROM {tabla} WHERE PERIODO = '{periodo}'")
         sqlconn.commit()
 
+    #Manejo de excepciones
     except sqlite3.Error as e:
         sqlconn.rollback()
 
@@ -81,7 +107,9 @@ def borrardatos(periodo):
 
 
 def prosFomularioAdicional(filepath):
-
+    """
+    Recibe la ubicación del formulario de datos, con base en el contenido de las jo
+    """
     xls = pd.ExcelFile(filepath)
     dfs = {}
     for sheet_name in xls.sheet_names:
@@ -247,16 +275,16 @@ def calcIndicadores(periodo,form):
         'PERIODO': periodo,
         'INDICADOR': 'CONSULTAS ODONTOLÓGICAS PRIMERA VEZ',
         'VALOR': hojasFormulario['Consolidado'].iloc[0,:5].sum(),
-        'META': None,
-        'RANGO': None
+        'META': hojasFormulario['Metas']['Meta'][10],
+        'RANGO': hojasFormulario['Metas']['Rango'][10]
     })
 
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'CONSULTAS ODONTOLÓGICAS SUBSECUENTES',
         'VALOR': hojasFormulario['Consolidado'].iloc[0,5],
-        'META': None,
-        'RANGO': None
+        'META': hojasFormulario['Metas']['Meta'][11],
+        'RANGO': hojasFormulario['Metas']['Rango'][11]
     })
 
     nuevoIndServ.append({
@@ -334,7 +362,7 @@ def calcIndicadores(periodo,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'NIÑOS (AS) DE 0 A MENOS DE 10 AÑOS',
-        'VALOR': (hojasFormulario['Consolidado'].iloc[1,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][17])
+        'VALOR': 100*(hojasFormulario['Consolidado'].iloc[1,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][17])
                 if hojasFormulario['Otros Datos']['Resultado'][17] > 0 else None,
         'META': hojasFormulario['Metas']['Meta'][15],
         'RANGO': hojasFormulario['Metas']['Rango'][15]
@@ -343,7 +371,7 @@ def calcIndicadores(periodo,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'ADOLESCENTES DE 10 A MENOS DE 20 AÑOS',
-        'VALOR': (hojasFormulario['Consolidado'].iloc[2,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][18])
+        'VALOR': 100*(hojasFormulario['Consolidado'].iloc[2,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][18])
                 if hojasFormulario['Otros Datos']['Resultado'][18] > 0 else None,
         'META': hojasFormulario['Metas']['Meta'][16],
         'RANGO': hojasFormulario['Metas']['Rango'][16]
@@ -352,7 +380,7 @@ def calcIndicadores(periodo,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'HOMBRES DE 20 AÑOS A 64 AÑOS',
-        'VALOR': (hojasFormulario['Consolidado'].iloc[3,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][19])
+        'VALOR': 100*(hojasFormulario['Consolidado'].iloc[3,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][19])
                 if hojasFormulario['Otros Datos']['Resultado'][19] > 0 else None,
         'META': hojasFormulario['Metas']['Meta'][17],
         'RANGO': hojasFormulario['Metas']['Rango'][17]
@@ -362,7 +390,7 @@ def calcIndicadores(periodo,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'MUJERES DE 20 AÑOS A 64 AÑOS',
-        'VALOR': (hojasFormulario['Consolidado'].iloc[4,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][20])
+        'VALOR': 100*(hojasFormulario['Consolidado'].iloc[4,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][20])
                 if hojasFormulario['Otros Datos']['Resultado'][20] > 0 else None,
         'META': hojasFormulario['Metas']['Meta'][18],
         'RANGO': hojasFormulario['Metas']['Rango'][18]
@@ -372,7 +400,7 @@ def calcIndicadores(periodo,form):
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'PERSONAS DE MÁS DE 65 AÑOS',
-        'VALOR': (hojasFormulario['Consolidado'].iloc[5,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][21])
+        'VALOR': 100*(hojasFormulario['Consolidado'].iloc[5,[0,1,3]].sum()/hojasFormulario['Otros Datos']['Resultado'][21])
                 if hojasFormulario['Otros Datos']['Resultado'][21] > 0 else None,
         'META': hojasFormulario['Metas']['Meta'][19],
         'RANGO': hojasFormulario['Metas']['Rango'][19]
@@ -480,7 +508,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'AUSENTISMO CONSULTA EXTERNA',
-            'VALOR': (row['Citas perdidas en consulta externa']/(row['Consultas realizadas en consulta externa']+row['Citas perdidas en consulta externa']+row['Cupos no utilizados en consulta externa']))
+            'VALOR': 100*(row['Citas perdidas en consulta externa']/(row['Consultas realizadas en consulta externa']+row['Citas perdidas en consulta externa']+row['Cupos no utilizados en consulta externa']))
                     if (row['Consultas realizadas en consulta externa']+row['Citas perdidas en consulta externa']+row['Cupos no utilizados en consulta externa']) > 0 else None,
             'META': hojasFormulario['Metas']['Meta'][4],
             'RANGO': hojasFormulario['Metas']['Rango'][4]
@@ -490,7 +518,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'SUSTITUCIÓN DE PACIENTES CONSULTA EXTERNA',
-            'VALOR': (row['Citas sustituidas en consulta externa']/row['Citas perdidas en consulta externa'])
+            'VALOR': 100*(row['Citas sustituidas en consulta externa']/row['Citas perdidas en consulta externa'])
                     if row['Citas perdidas en consulta externa'] > 0 else None,
             'META': hojasFormulario['Metas']['Meta'][6],
             'RANGO': hojasFormulario['Metas']['Rango'][6]
@@ -524,7 +552,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'AUSENTISMO CONSULTA PROCEDIMIENTOS',
-            'VALOR': (row['Citas perdidas en consulta procedimiento']/(row['Consultas realizadas en consulta procedimiento']+row['Citas perdidas en consulta procedimiento']+row['Cupos no utilizados en consulta procedimiento']))
+            'VALOR': 100*(row['Citas perdidas en consulta procedimiento']/(row['Consultas realizadas en consulta procedimiento']+row['Citas perdidas en consulta procedimiento']+row['Cupos no utilizados en consulta procedimiento']))
                     if (row['Consultas realizadas en consulta procedimiento']+row['Citas perdidas en consulta procedimiento']+row['Cupos no utilizados en consulta procedimiento']) > 0 else None,
             'META': hojasFormulario['Metas']['Meta'][5],
             'RANGO': hojasFormulario['Metas']['Rango'][5]
@@ -533,7 +561,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'SUSTITUCIÓN DE PACIENTES CONSULTA PROCEDIMIENTOS',
-            'VALOR': (row['Citas sustituidas en consulta procedimiento']/row['Citas perdidas en consulta procedimiento'])
+            'VALOR': 100*(row['Citas sustituidas en consulta procedimiento']/row['Citas perdidas en consulta procedimiento'])
                     if row['Citas perdidas en consulta procedimiento'] > 0 else None,
             'META': hojasFormulario['Metas']['Meta'][7],
             'RANGO': hojasFormulario['Metas']['Rango'][7]
@@ -563,7 +591,7 @@ def calcIndicadores(periodo,form):
         nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
-            'INDICADOR': 'PORCENTAJE DE PACIENTES EN ORTODONCIA',
+            'INDICADOR': 'PACIENTES EN ORTODONCIA',
             'VALOR': row['Porcentaje de pacientes en ortodoncia'],
             'META': None,
             'RANGO': None
@@ -571,7 +599,7 @@ def calcIndicadores(periodo,form):
         nuevoIndDoc.append({
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
-            'INDICADOR': 'PORCENTAJE DE PACIENTES EN ORTOPEDIA',
+            'INDICADOR': 'PACIENTES EN ORTOPEDIA',
             'VALOR': row['Porcentaje de pacientes en ortopedia'],
             'META': None,
             'RANGO': None
@@ -705,6 +733,10 @@ def main(page: Page):
         error_dialog.open = False
         page.update()
 
+    def close_missing_data_dialog(e):
+        missing_data_dialog.open = False
+        page.update()
+
     def show_success_dialog():
         page.dialog = success_dialog
         success_dialog.open = True
@@ -713,6 +745,11 @@ def main(page: Page):
     def show_error_dialog():
         page.dialog = error_dialog
         error_dialog.open = True
+        page.update()
+
+    def show_missing_data_dialog():
+        page.dialog = missing_data_dialog
+        missing_data_dialog.open = True
         page.update()
 
 
@@ -762,13 +799,16 @@ def main(page: Page):
 
     def func_ind(e):
         periodo = mes_dropdown.current.value +" "+ yr_dropdown.current.value
-        if validararchivo(excel_form_path.current):
+        val_file = validararchivo(excel_form_path.current)
+        if val_file == 'comp':
             if validardatabase(periodo):
                 confirm_delete_dialog(page)
             else:
                 cargar_ind.current.disabled = True
                 calcIndicadores(periodo,excel_form_path.current)
                 show_success_dialog()
+        elif val_file == 'data':
+            show_missing_data_dialog()
         else:
             show_error_dialog()
 
@@ -805,6 +845,15 @@ def main(page: Page):
         content=ft.Text("Archivo incorrecto, favor validar"),
         actions=[
             ft.TextButton("OK", on_click=close_error_dialog)
+        ],
+        actions_alignment=ft.MainAxisAlignment.END)
+
+    missing_data_dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Error!"),
+        content=ft.Text("Faltan datos en el formulario, favor validar."),
+        actions=[
+            ft.TextButton("OK", on_click=close_missing_data_dialog)
         ],
         actions_alignment=ft.MainAxisAlignment.END)
     
@@ -846,7 +895,7 @@ def main(page: Page):
                 Text(value="Favor seleccionar el archivo",width = 275)]),  
         Row(
             [
-                Text(value="Cargar el Formulario de datos adicionales",width = 275),
+                Text(value="Cargar el Formulario de datos:",width = 275),
                 ElevatedButton(
                     "Cargar Archivo", width = 200,
                     icon=icons.UPLOAD_FILE,
