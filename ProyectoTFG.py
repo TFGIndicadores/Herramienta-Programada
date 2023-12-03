@@ -85,7 +85,16 @@ def validardatabase(periodo):
 
 def borrardatos(periodo):
     """
-    Elimina las filas de la base de datos encontrados para el periodo indicado, para prevenir duplicación de datos.
+    Elimina las filas de la base de datos encontradas para el periodo indicado, para prevenir duplicación de datos.
+
+    Esta función se conecta a la base de datos SQLite especificada en 'db_path' y elimina los registros
+    correspondientes al periodo dado. Se utiliza para garantizar que no haya datos duplicados en la base de datos.
+
+    Args:
+    periodo (str): Periodo de tiempo para el cual se deben eliminar los datos en la base de datos.
+
+    Returns:
+    None: Esta función no retorna valores, pero modifica la base de datos eliminando registros.
     """
     # Conexión a la base de datos
     sqlconn = sqlite3.connect(db_path)
@@ -108,7 +117,18 @@ def borrardatos(periodo):
 
 def prosFomularioAdicional(filepath):
     """
-    Recibe la ubicación del formulario de datos, con base en el contenido de las jo
+    Procesa un archivo de Excel especificado por la ruta 'filepath'.
+
+    Esta función lee un archivo de Excel, procesando cada una de sus hojas. Para hojas distintas de 'Consolidado', 
+    ajusta los encabezados y estructura de los datos. Para la hoja 'Consolidado', realiza una serie de 
+    transformaciones más complejas incluyendo limpieza de datos, reestructuración de filas y columnas, y 
+    transposición de tablas. El objetivo es preparar los datos para su posterior análisis o almacenamiento.
+
+    Args:
+    filepath (str): Ruta al archivo de Excel a procesar.
+
+    Returns:
+    dict: Un diccionario de DataFrames de pandas, cada uno correspondiente a una hoja del archivo Excel procesado.
     """
     xls = pd.ExcelFile(filepath)
     dfs = {}
@@ -167,6 +187,24 @@ def prosFomularioAdicional(filepath):
     return dfs
 
 def calcIndicadores(periodo,form):
+
+    """
+    Calcula y almacena varios indicadores basados en los datos proporcionados en un formulario de Excel.
+
+    Esta función procesa un archivo de Excel (especificado por 'form') para calcular una variedad de indicadores
+    en diferentes categorías como servicio, especialidad, y profesional. Utiliza la función 'prosFomularioAdicional'
+    para leer y procesar las hojas de cálculo del archivo. Luego, calcula varios indicadores y los almacena en 
+    diferentes DataFrames de pandas. Finalmente, si no existe la base de datos especificada en 'db_path', crea las 
+    tablas necesarias y almacena los indicadores calculados en la base de datos.
+
+    Args:
+    periodo (str): El periodo de tiempo para el cual se calculan los indicadores.
+    form (str): Ruta al archivo de Excel que contiene los datos para el cálculo de los indicadores.
+
+    Returns:
+    None: Esta función no retorna valores, pero realiza cambios en una base de datos y crea DataFrames.
+    """
+
     hojasFormulario = prosFomularioAdicional(form)
     
     #Calculo de indicadores servicio
@@ -722,8 +760,21 @@ def calcIndicadores(periodo,form):
     sqlconn.close()
 
 def main(page: Page):
-    
-    fxls = False
+    """
+    Define la interfaz gráfica y el comportamiento de la aplicación.
+
+    Esta función configura la interfaz de usuario utilizando Flet para una aplicación que procesa y carga indicadores 
+    de servicio de odontología. Incluye la creación de elementos gráficos como cuadros de diálogo, botones, menús 
+    desplegables y un selector de archivos. También establece las funciones de respuesta a eventos como la selección 
+    de archivos, cambios en los menús desplegables y el clic en botones, gestionando la lógica de validación, 
+    procesamiento y carga de datos en una base de datos.
+
+    Args:
+    page (Page): Objeto 'Page' de Flet que representa la ventana de la aplicación.
+
+    Returns:
+    None: Esta función no retorna valores, pero modifica el objeto 'page' para construir y desplegar la interfaz gráfica.
+    """
 
     def close_success_dialog(e):
         success_dialog.open = False
