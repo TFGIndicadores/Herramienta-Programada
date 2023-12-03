@@ -508,7 +508,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'CAPACIDAD DE PRODUCCIÓN PREVISTA',
-            'VALOR': 2* (row['Horas programadas para consulta externa'] * est_pac_unidad),
+            'VALOR': (row['Horas programadas para consulta externa'] * est_pac_unidad),
             'META': None,
             'RANGO': None
         })
