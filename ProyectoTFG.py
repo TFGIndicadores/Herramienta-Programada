@@ -14,7 +14,7 @@ from flet import (
 )
 
 
-db_path = "PruebasTFG_new.db"
+db_path = "Indicadores base de datos.db"
 tablas = ['IndicadoresServicio', 'IndicadoresEspecialidad', 'IndicadoresDoctor', 'IndicadoresReferencias', 'IndicadoresListas', 'IndicadoresMetas']
 
 def validararchivo(filepath):
