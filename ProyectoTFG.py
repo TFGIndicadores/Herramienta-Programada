@@ -211,12 +211,14 @@ def calcIndicadores(periodo,form):
     indServicio = pd.DataFrame(columns=['PERIODO', 'INDICADOR', 'VALOR', 'META', 'RANGO'])
 
     nuevoIndServ=[]
-
+    if hojasFormulario['Consultas Externas']['Horas programadas para consulta externa'].sum() > 0:
+        est_pac_unidad= (hojasFormulario['Consultas Externas']['Consultas programadas en consulta externa'].sum()/hojasFormulario['Consultas Externas']['Horas programadas para consulta externa'].sum())
+    else:
+        est_pac_unidad = None
     nuevoIndServ.append({
         'PERIODO': periodo,
         'INDICADOR': 'ESTÁNDAR PACIENTE POR HORA DE LA UNIDAD',
-        'VALOR': (hojasFormulario['Consultas Externas']['Consultas programadas en consulta externa'].sum()/hojasFormulario['Consultas Externas']['Horas programadas para consulta externa'].sum())
-                if hojasFormulario['Consultas Externas']['Horas programadas para consulta externa'].sum() > 0 else None,
+        'VALOR': est_pac_unidad,
         'META': hojasFormulario['Metas']['Meta'][0],
         'RANGO': hojasFormulario['Metas']['Rango'][0]
     })
@@ -506,7 +508,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'CAPACIDAD DE PRODUCCIÓN PREVISTA',
-            'VALOR': 2* (row['Horas programadas para consulta externa'] * hojasFormulario['Metas']['Meta'][2]),
+            'VALOR': 2* (row['Horas programadas para consulta externa'] * est_pac_unidad),
             'META': None,
             'RANGO': None
         })
@@ -516,8 +518,8 @@ def calcIndicadores(periodo,form):
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PRODUCCIÓN REAL',
             'VALOR': row['Consultas realizadas en consulta externa'],
-            'META': (row['Horas programadas para consulta externa'] * hojasFormulario['Metas']['Meta'][2])*hojasFormulario['Metas']['Meta'][1],
-            'RANGO': (row['Horas programadas para consulta externa'] * hojasFormulario['Metas']['Meta'][2])*hojasFormulario['Metas']['Meta'][1]*hojasFormulario['Metas']['Porcentaje de desviación de la meta'][1]
+            'META': (2* (row['Horas programadas para consulta externa'] * est_pac_unidad))*hojasFormulario['Metas']['Meta'][1],
+            'RANGO': (2* (row['Horas programadas para consulta externa'] * est_pac_unidad))*hojasFormulario['Metas']['Meta'][1]*hojasFormulario['Metas']['Porcentaje de desviación de la meta'][1]
         })
 
         nuevoIndDoc.append({
@@ -630,7 +632,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PACIENTES EN ORTODONCIA',
-            'VALOR': row['Porcentaje de pacientes en ortodoncia'],
+            'VALOR': 100 * row['Porcentaje de pacientes en ortodoncia'],
             'META': None,
             'RANGO': None
         })
@@ -638,7 +640,7 @@ def calcIndicadores(periodo,form):
             'PERIODO': periodo,
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PACIENTES EN ORTOPEDIA',
-            'VALOR': row['Porcentaje de pacientes en ortopedia'],
+            'VALOR': 100 * row['Porcentaje de pacientes en ortopedia'],
             'META': None,
             'RANGO': None
         })
