@@ -518,8 +518,8 @@ def calcIndicadores(periodo,form):
             'PROFESIONAL' : row['Profesional'],
             'INDICADOR': 'PRODUCCIÓN REAL',
             'VALOR': row['Consultas realizadas en consulta externa'],
-            'META': (2* (row['Horas programadas para consulta externa'] * est_pac_unidad))*hojasFormulario['Metas']['Meta'][1],
-            'RANGO': (2* (row['Horas programadas para consulta externa'] * est_pac_unidad))*hojasFormulario['Metas']['Meta'][1]*hojasFormulario['Metas']['Porcentaje de desviación de la meta'][1]
+            'META': ((row['Horas programadas para consulta externa'] * est_pac_unidad))*hojasFormulario['Metas']['Meta'][1],
+            'RANGO': ((row['Horas programadas para consulta externa'] * est_pac_unidad))*hojasFormulario['Metas']['Meta'][1]*hojasFormulario['Metas']['Porcentaje de desviación de la meta'][1]
         })
 
         nuevoIndDoc.append({
