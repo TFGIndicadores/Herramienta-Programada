@@ -885,8 +885,8 @@ def main(page: Page):
 
     success_dialog = ft.AlertDialog(
         modal=True,
-        title=ft.Text("Completado!"),
-        content=ft.Text("Se cargaron los indicadores correctamente!"),
+        title=ft.Text("¡Completado!"),
+        content=ft.Text("Se cargaron los indicadores correctamente."),
         actions=[
             ft.TextButton("OK", on_click=close_success_dialog)
         ],
@@ -894,8 +894,8 @@ def main(page: Page):
     
     error_dialog = ft.AlertDialog(
         modal=True,
-        title=ft.Text("Error!"),
-        content=ft.Text("Archivo incorrecto, favor validar"),
+        title=ft.Text("¡Error!"),
+        content=ft.Text("Archivo incorrecto, favor validar."),
         actions=[
             ft.TextButton("OK", on_click=close_error_dialog)
         ],

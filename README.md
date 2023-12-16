@@ -16,19 +16,19 @@ Esta herramienta de Python ha sido desarrollada como parte de un proyecto para m
 - **Bibliotecas de Python**: La herramienta depende de varias bibliotecas, incluyendo `pandas` 1.5.3, `sqlite3` 3.41.2, `flet` 0.12.2 y `os`. Estas deben ser instaladas antes de ejecutar la aplicación.
 
 ### Instalación
-1. **Clonar o Descargar**: Clonar este repositorio o descargae el archivo `ProyectoTFG.py` en el directorio de trabajo.
+1. **Clonar o Descargar**: Clonar este repositorio o descargae el archivo `HerramientaProgramada.py` en el directorio de trabajo.
 2. **Instalar Dependencias**: Ejecutar el siguiente comando para instalar las dependencias necesarias:\
 `pip install pandas flet`\
 Nota: Las bibliotecas `sqlite3` y `os` ya están incluidas en la instalación estándar de Python.
 
 ### Uso
-1. **Ejecución del Script**: Ejecutar el script `ProyectoTFG.py` en el entorno Python. Esto iniciará la interfaz gráfica de usuario desarrollada con `flet`.
+1. **Ejecución del Script**: Ejecutar el script `HerramientaProgramada.py` en el entorno Python. Esto iniciará la interfaz gráfica de usuario desarrollada con `flet`.
 2. **Selección de Archivos y Periodos**: Utiliza la interfaz gráfica para seleccionar el archivo de Excel (.xlsx) y definir el periodo para el análisis de los indicadores.
 3. **Validación de Datos**: La herramienta realiza validaciones automáticas del archivo subido para asegurar que estén en el formato correcto y prevenir duplicados en la base de datos.
 4. **Cálculo de indicadores**: Una vez procesados los datos, la herramienta calcula indicadores con base en los datos, e inserta los resultados en la base de datos `PruebasTFG.db`.
 
 ### Notas Adicionales
-- La base de datos utilizada por la herramienta es `PruebasTFG.db`, es necesario validar que esté disponible en el directorio de trabajo.
+- La base de datos utilizada por la herramienta es `Indicadores base de datos.db`, es necesario validar que esté disponible en el directorio de trabajo.
 
 ## Contribuir
 Contibuciones a este reporsitorio solo son admitidas por parte de los estudiantes encargados del desarrollo, el asesor técnico, o el director del Trabajo Final de Graduación.
