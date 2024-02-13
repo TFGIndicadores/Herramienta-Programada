@@ -654,16 +654,26 @@ def calcIndicadores(periodo,form):
 
 
     #Referencias por area de salud
-    indReferencias = hojasFormulario['Referencias'].iloc[:,1:].groupby('Área de Salud', as_index = False).sum()
+    indReferencias = pd.DataFrame()
+    indReferenciasTemp = hojasFormulario['Referencias'].copy()
+    indReferenciasTemp = indReferenciasTemp.iloc[:,1:15]
+    indReferenciasTemp = indReferenciasTemp.groupby('Área de Salud', as_index = False).sum()
+    indReferencias = indReferenciasTemp
     indReferencias.insert(0, 'PERIODO', periodo)
 
     #Listas de espera
-    indListas = hojasFormulario['Listas de espera'].iloc[:,:3].copy()
+    indListas = pd.DataFrame()
+    indListasTemp = hojasFormulario['Listas de espera'].copy()
+    indListasTemp = indListasTemp.iloc[:,:3]
+    indListas = indListasTemp
     indListas.insert(0, 'PERIODO', periodo)
     indListas
 
     #Metas de indicadores
-    listMetas = hojasFormulario['Metas'].iloc[:,:4].copy()
+    listMetas = pd.DataFrame()
+    listMetasTemp = hojasFormulario['Metas'].copy()
+    listMetasTemp = listMetasTemp.iloc[:,:4]
+    listMetas = listMetasTemp
     listMetas.insert(0, 'PERIODO', periodo)
 
 
@@ -903,7 +913,7 @@ def main(page: Page):
 
     missing_data_dialog = ft.AlertDialog(
         modal=True,
-        title=ft.Text("Error!"),
+        title=ft.Text("¡Error!"),
         content=ft.Text("Faltan datos en el formulario, favor validar."),
         actions=[
             ft.TextButton("OK", on_click=close_missing_data_dialog)
