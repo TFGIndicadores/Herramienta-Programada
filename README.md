@@ -13,12 +13,12 @@ Esta herramienta de Python ha sido desarrollada como parte de un proyecto para m
 
 ### Requisitos Previos
 - **Python**: Es necesario asegurarse de tener Python instalado en el sistema. Esta herramienta ha sido desarrollada y probada en Python 3.11.4
-- **Bibliotecas de Python**: La herramienta depende de varias bibliotecas, incluyendo `pandas` 1.5.3, `sqlite3` 3.41.2, `flet` 0.12.2 y `os`. Estas deben ser instaladas antes de ejecutar la aplicación.
+- **Bibliotecas de Python**: La herramienta depende de varias bibliotecas, incluyendo `pandas` 1.5.3, `sqlite3` 3.41.2, `flet` 0.12.2, `sqlalchemy` 2.0.27 y `os`. Estas deben ser instaladas antes de ejecutar la aplicación.
 
 ### Instalación
 1. **Clonar o Descargar**: Clonar este repositorio o descargae el archivo `HerramientaProgramada.py` en el directorio de trabajo.
 2. **Instalar Dependencias**: Ejecutar el siguiente comando para instalar las dependencias necesarias:\
-`pip install pandas flet`\
+`pip install pandas flet sqlalchemy`\
 Nota: Las bibliotecas `sqlite3` y `os` ya están incluidas en la instalación estándar de Python.
 
 ### Uso

@@ -1,5 +1,7 @@
 import pandas as pd
 import sqlite3
+import sqlalchemy
+from sqlalchemy.types import *
 import os
 import flet as ft
 from flet import (
@@ -679,8 +681,8 @@ def calcIndicadores(periodo,form):
 
     #Cargar tablas a BD
     if not os.path.exists(db_path):
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+        conn = sqlalchemy.create_engine(f'sqlite:///{db_path}')
+        cursor = conn.connect()
 
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS IndicadoresServicio (
@@ -754,22 +756,75 @@ def calcIndicadores(periodo,form):
             )
         ''')
         cursor.close()
-        conn.close()
+        conn.dispose()
 
+    sqlconn = sqlalchemy.create_engine(f'sqlite:///{db_path}')
 
+    dtypes_indicadores_servicio = {
+        'PERIODO': String,
+        'INDICADOR': String,
+        'VALOR': Float,
+        'META': Float,
+        'RANGO': Float
+    }
 
-    sqlconn = sqlite3.connect(db_path)
-    cursor = sqlconn.cursor()
+    dtypes_indicadores_especialidad = {
+        'PERIODO': String,
+        'ESPECIALIDAD': String,
+        'INDICADOR': String,
+        'VALOR': Float
+    }
 
-    indServicio.to_sql('IndicadoresServicio', sqlconn, if_exists='append', index=False)
-    indEspecialidad.to_sql('IndicadoresEspecialidad', sqlconn, if_exists='append', index=False)
-    indDoctor.to_sql('IndicadoresDoctor', sqlconn, if_exists='append', index=False)
-    indReferencias.to_sql('IndicadoresReferencias', sqlconn, if_exists='append', index=False)
-    indListas.to_sql('IndicadoresListas', sqlconn, if_exists='append', index=False)
-    listMetas.to_sql('IndicadoresMetas', sqlconn, if_exists='append', index=False)
+    dtypes_indicadores_doctor = {
+        'PERIODO': String,
+        'PROFESIONAL': String,
+        'INDICADOR': String,
+        'VALOR': Float,
+        'META': Float,
+        'RANGO': Float
+    }
 
-    cursor.close()
-    sqlconn.close()
+    dtypes_indicadores_referencias = {
+        'PERIODO': String,
+        'Área de Salud': String,
+        'O.G.': Float,
+        'O.G.A': Float,
+        'ORTOD.': Float,
+        'ENDOD.': Float,
+        'PERIOD.': Float,
+        'PROSTOD.': Float,
+        'TTM D.O.': Float,
+        'PROT.MAXILOF.': Float,
+        'ODONTOPED.': Float,
+        'ODONTOGER.': Float,
+        'CIR.MAXILOF.': Float,
+        'Rechazado': Float,
+        'Aceptado': Float
+    }
+
+    dtypes_indicadores_listas = {
+        'PERIODO': String,
+        'Especialidad': String,
+        'Factor crítico': String,
+        'Fecha próxima cita': Date
+    }
+
+    dtypes_indicadores_metas = {
+        'PERIODO': String,
+        'Indicador': String,
+        'Meta': Float,
+        'Porcentaje de desviación de la meta': Float,
+        'Rango': Float
+    }
+
+    indServicio.to_sql('IndicadoresServicio', sqlconn, if_exists='append', index=False, dtype=dtypes_indicadores_servicio)
+    indEspecialidad.to_sql('IndicadoresEspecialidad', sqlconn, if_exists='append', index=False, dtype=dtypes_indicadores_especialidad)
+    indDoctor.to_sql('IndicadoresDoctor', sqlconn, if_exists='append', index=False, dtype=dtypes_indicadores_doctor)
+    indReferencias.to_sql('IndicadoresReferencias', sqlconn, if_exists='append', index=False, dtype=dtypes_indicadores_referencias)
+    indListas.to_sql('IndicadoresListas', sqlconn, if_exists='append', index=False, dtype=dtypes_indicadores_listas)
+    listMetas.to_sql('IndicadoresMetas', sqlconn, if_exists='append', index=False, dtype=dtypes_indicadores_metas)
+
+    sqlconn.dispose()
 
 def main(page: Page):
     """
